@@ -4,7 +4,7 @@ param(
 )
 
 # Importa o script externo de OCR
-. "C:\Users\l.gomes\Documents\Scripts\Call-PdfOcr.ps1"
+. "C:\Users\l.gomes\Documents\Scripts\pdf-ocr-sheets-automation\Call-PdfOcr.ps1"
 
 $listaDePDFs = Get-ChildItem "$($DirPath)" -Filter "*.pdf" |
                 Where-Object { $_.Name -notlike "*_ocr.pdf" }
