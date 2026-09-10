@@ -15,16 +15,20 @@ foreach ($pdf in $listaDePDFs)
     Write-Host "Processando item da fila: $($pdf.Name)..." -ForegroundColor Cyan
     
     # 1. Tenta fazer OCR via seu módulo Call-PdfOcr.ps1
-    $sucesso = Call-PdfOcr -FilePath $pdf.FullName
+    $sucessoOcr = Call-PdfOcr -FilePath $pdf.FullName
 
-    if ($sucesso -eq "pulado") 
+    if ($sucessoOcr -eq "pulado") 
 	{
         Write-Host "PULADO (OCR ja existe) -> $($pdf.Name)" -ForegroundColor Yellow
     } 
-	elseif ($sucesso -eq "ok") 
+	elseif ($sucessoOcr -eq "ok") 
 	{
         Write-Host "OK -> $($pdf.Name)" -ForegroundColor Green
-		$ocrOriginalPath = Join-Path $pdf.DirectoryName "$($pdf.BaseName)_ocr$($pdf.Extension)"
+		
+		# 2. Tenta puxar o nome do colaborador com IA Ollama local.
+		$ocrFile = Join-Path $pdf.DirectoryName "$($pdf.BaseName)_ocr$($pdf.Extension)"
+		$sucessoNome = Get-NomeColaborador -OcrFilePath $ocrFile
+		Write-Host $sucessoNome
     } 
 	else 
 	{

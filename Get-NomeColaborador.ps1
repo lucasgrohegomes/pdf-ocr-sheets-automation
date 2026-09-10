@@ -1,47 +1,51 @@
-#function Get-NomeColaborador {
+function Get-NomeColaborador {
 	param(
 		[Parameter(mandatory=$true)]
 		[string]$OcrFilePath
 	)
 	
-	$ocrText	= & pdftotext.exe -enc UTF-8 $OcrFilePath -
+	$ocrText	= & pdftotext.exe -f 1 -l 10 -enc UTF-8 $OcrFilePath -
 #	Write-Host $ocrText
 
 	# Modelo de json para servir como molde para o output.
     $jsonSchema = @{
         type = "object"
         properties = @{
-            name = @{
+            owner_name = @{
                 type = "string"
                 description = "O nome completo do colaborador ou titular sobre o qual o documento se refere. Retorne 'Não encontrado.' se não houver."
             }
         }
-        required = @("name")
+        required = @("owner_name")
     }
 	
 	$systemPrompt = @"
-Você é um especialista em análise de documentos corporativos.
-Sua missão é identificar a PESSOA PRINCIPAL sobre a qual o texto trata (o colaborador, paciente, funcionário ou titular do documento).
+Você é um extrator de entidades focado EXCLUSIVAMENTE em NOMES DE PESSOAS FÍSICAS.
+Sua TAREFA ÚNICA é extrair o NOME PRÓPRIO COMPLETO do colaborador ou titular humano (ex: 'Natalis Del Valle Bello Castro').
 
-REGRAS CRÍTICAS DE EXTRAÇÃO:
-1. DESCONSIDERE nomes que aparecem em cabeçalhos, rodapés ou metadados de sistemas (ex: 'Impresso por', 'Gerado por', 'Usuário:', 'Operador:', 'Atendente:', 'Analista:', 'Assinado por'). Nomes que representem o operador/sistema devem ser IGNOARADOS.
-2. O colaborador principal é a pessoa citada no CORPO DO TEXTO, sobre a qual o relatório, atestado, holerite ou documento se refere repetidamente.
-3. Se houver mais de um nome, escolha SEMPRE aquele que é o SUJEITO/FOCO da análise do documento, e não quem gerou ou imprimiu o arquivo.
-4. Ignorar linhas de código PHP, JavaScript e lógica interna, apenas focando no conteúdo textual do documento.
+REGRAS OBRIGATÓRIAS DE EXCLUSÃO:
+1. O valor retornado DEVE ser obrigatoriamente o NOME DE UMA PESSOA (Humano).
+2. NUNCA retorne títulos de documentos, seções ou contratos (EXEMPLOS PROIBIDOS: 'Contrato de Trabalho', 'Detalhamento do Salário', 'Holerite', 'Atestado Médico', 'Folha de Pagamento', 'Ficha Cadastral').
+3. NUNCA retorne cargos, departamentos ou nomes de empresas (EXEMPLOS PROIBIDOS: 'Auxiliar de Cozinha', 'SESI', 'SENAI', 'Recursos Humanos').
+4. NUNCA retorne nomes de operadores de sistema ou quem assinou o documento.
+5. Se não encontrar um NOME DE PESSOA HUMANA claro no texto, retorne exatamente: "Não encontrado."
 "@
 
 	$userPrompt   = "Texto do documento:`n$ocrText"
 	
 	$bodyObject	= @{
-		model = "llama3.2:3b"
-        system  = $systemPrompt
-        prompt  = $userPrompt
-        stream  = $false
-        format  = $jsonSchema		# Passando o esquema de json direto no formato, 
-									# para que o retorno venha de acordo.
-        options = @{
-            temperature = 0.0		# Configurando limite de input de dados 
-            num_ctx     = 8192		# e criatividade.
+		model 			= "llama3.2:3b"
+        system  		= $systemPrompt
+        prompt  		= $userPrompt
+        stream  		= $false
+        format  		= $jsonSchema		# Passando o esquema de json direto no formato, 
+											# para que o retorno venha de acordo.
+									
+		keep_alive 		= 0					# Zera o tempo de vida da IA pra evitar que degrade
+											# após varios docs, levando a alucinação.
+        options 		= @{
+            temperature = 0.0				# Configurando limite de input de dados 
+            num_ctx     = 4096				# e criatividade.
         }
 	}
 	
@@ -60,10 +64,10 @@ REGRAS CRÍTICAS DE EXTRAÇÃO:
 		Write-Host "--------------------------------" -ForegroundColor Cyan
 
 		$result = $response.response | ConvertFrom-Json
-		return $result.name
+		return $result.owner_name
     }
     catch {
         Write-Error "Erro ao processar: $_"
         return $null
     }
-#}
+}
