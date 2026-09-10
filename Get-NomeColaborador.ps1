@@ -7,6 +7,7 @@
 	$ocrText	= & pdftotext.exe -enc UTF-8 $OcrFilePath -
 #	Write-Host $ocrText
 
+	# Modelo de json para servir como molde para o output.
     $jsonSchema = @{
         type = "object"
         properties = @{
@@ -38,19 +39,19 @@ REGRAS CRÍTICAS DE EXTRAÇÃO:
         system  = $systemPrompt
         prompt  = $userPrompt
         stream  = $false
-        format  = $jsonSchema  # Passando o Schema direto no formato
+        format  = $jsonSchema		# Passando o esquema de json direto no formato, 
+									# para que o retorno venha de acordo.
         options = @{
-            temperature = 0.0
-            num_ctx     = 8192
+            temperature = 0.0		# Configurando limite de input de dados 
+            num_ctx     = 8192		# e criatividade.
         }
 	}
 	
 	$jsonString = $bodyObject | ConvertTo-Json -Depth 10
     $utf8Bytes  = [System.Text.Encoding]::UTF8.GetBytes($jsonString)
 	
-	Write-Host "Checkpoint 3."
-	
 	try {
+		# API do Ollama.
 		$response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" `
                                       -Method Post `
                                       -Body $utf8Bytes `
