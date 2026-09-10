@@ -62,7 +62,16 @@ REGRAS RÍGIDAS DE FORMATAÇÃO:
 		Write-Host "--------------------------------" -ForegroundColor Cyan
 
 		$result = $response.response | ConvertFrom-Json
-		return $result.owner_name
+		$nomeExtraido = $result.owner_name
+
+		# Se o modelo devolver nomes separados por vírgula, pega o nome mais longo (o completo)
+		if ($nomeExtraido -and $nomeExtraido.Contains(",")) {
+			$listaNomes = $nomeExtraido -split "," | ForEach-Object { $_.Trim() }
+			# Ordena pelo tamanho do texto e pega o maior (ex: prefere "Natalis Del Valle..." ao invés de "M. Castro")
+			$nomeExtraido = ($listaNomes | Sort-Object Length -Descending)[0]
+		}
+
+    return $nomeExtraido
     }
     catch {
         Write-Error "Erro ao processar: $_"
