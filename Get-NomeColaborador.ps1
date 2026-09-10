@@ -31,8 +31,6 @@ REGRAS CRÍTICAS DE EXTRAÇÃO:
 "@
 
 	$userPrompt   = "Texto do documento:`n$ocrText"
-
-	Write-Host "Checkpoint 2."
 	
 	$bodyObject	= @{
 		model = "llama3.2:3b"
@@ -62,7 +60,7 @@ REGRAS CRÍTICAS DE EXTRAÇÃO:
 		Write-Host "--------------------------------" -ForegroundColor Cyan
 
 		$result = $response.response | ConvertFrom-Json
-		return $result.owner_name
+		return $result.name
     }
     catch {
         Write-Error "Erro ao processar: $_"
