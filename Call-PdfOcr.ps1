@@ -1,4 +1,4 @@
-﻿function Call-PdfOcr {
+function Call-PdfOcr {
 	param(
 		[Parameter(mandatory=$true)]
 		[string]$FilePath
@@ -11,11 +11,12 @@
 	# Caminho para descartar o log em vez de jogar na tela
     $nullPath = [System.IO.Path]::GetTempFileName()
 	
-	if (Test-Path $outPath) {
+	if (Test-Path $outPath) 
+	{
 		return "pulado"
 	}
 
-    # Executa o processo de forma silenciosa e aguarda a conclusão
+    # Executa o processo de forma silenciosa e aguarda a conclusão. Os dados do console são passados para um arquivo da variável que será deletada.
     $process = Start-Process -FilePath $exePath `
                              -ArgumentList "-file `"$($file.FullName)`" -outputFile `"$outPath`" -language por" `
                              -RedirectStandardOutput $nullPath `
@@ -26,9 +27,12 @@
     # Limpa o arquivo temporário de log
     if (Test-Path $nullPath) { Remove-Item $nullPath -Force }
 	
-	if (Test-Path $outPath) {
+	if (Test-Path $outPath) 
+	{
 		return "ok"
-	} else {
+	}
+	else 
+	{
 		return "falha"
 	}
 }
