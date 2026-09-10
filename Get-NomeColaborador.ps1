@@ -13,22 +13,20 @@ function Get-NomeColaborador {
         properties = @{
             owner_name = @{
                 type = "string"
-                description = "O nome completo do colaborador ou titular sobre o qual o documento se refere. Retorne 'Não encontrado.' se não houver."
+                description = "Apenas UM NOME COMPLETO sem vírgulas, sem listas e sem abreviações duplicadas."
             }
         }
         required = @("owner_name")
     }
 	
 	$systemPrompt = @"
-Você é um extrator de entidades focado EXCLUSIVAMENTE em NOMES DE PESSOAS FÍSICAS.
-Sua TAREFA ÚNICA é extrair o NOME PRÓPRIO COMPLETO do colaborador ou titular humano (ex: 'Natalis Del Valle Bello Castro').
+Você é um extrator de dados estrito. Sua tarefa é extrair o NOME COMPLETO da pessoa física principal.
 
-REGRAS OBRIGATÓRIAS DE EXCLUSÃO:
-1. O valor retornado DEVE ser obrigatoriamente o NOME DE UMA PESSOA (Humano).
-2. NUNCA retorne títulos de documentos, seções ou contratos (EXEMPLOS PROIBIDOS: 'Contrato de Trabalho', 'Detalhamento do Salário', 'Holerite', 'Atestado Médico', 'Folha de Pagamento', 'Ficha Cadastral').
-3. NUNCA retorne cargos, departamentos ou nomes de empresas (EXEMPLOS PROIBIDOS: 'Auxiliar de Cozinha', 'SESI', 'SENAI', 'Recursos Humanos').
-4. NUNCA retorne nomes de operadores de sistema ou quem assinou o documento.
-5. Se não encontrar um NOME DE PESSOA HUMANA claro no texto, retorne exatamente: "Não encontrado."
+REGRAS RÍGIDAS DE FORMATAÇÃO:
+1. Retorne apenas UM ÚNICO NOME COMPLETO (ex: 'Natalis Del Valle Bello Castro').
+2. NUNCA use vírgulas, NUNCA concatene múltiplos nomes e NUNCA crie listas (PROIBIDO: 'M. Castro, Natalis Del Valle Bello Castro').
+3. Se o nome aparecer de formas diferentes (ex: abreviado e completo), escolha SEMPRE a versão mais completa e por extenso.
+4. Desconsidere títulos de documentos, cargos, nomes de empresas e operadores de sistema.
 "@
 
 	$userPrompt   = "Texto do documento:`n$ocrText"
