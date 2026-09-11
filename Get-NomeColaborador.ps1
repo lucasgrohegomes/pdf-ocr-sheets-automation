@@ -4,8 +4,20 @@ function Get-NomeColaborador {
 		[string]$OcrFilePath
 	)
 	
-	$ocrText	= & pdftotext.exe -f 1 -l 10 -enc UTF-8 $OcrFilePath -
-#	Write-Host $ocrText
+	# Out-String garante que a variável seja UMA STRING ÚNICA e não um Array de linhas
+    $ocrText = & pdftotext.exe -f 1 -l 3 -enc UTF-8 "$OcrFilePath" - | Out-String
+
+    # Se estiver vazio ou só com espaços
+    if ([string]::IsNullOrWhiteSpace($ocrText)) {
+        Write-Warning "Texto OCR vazio para: $OcrFilePath"
+        return "Nao_encontrado"
+    }
+
+    $ocrText = $ocrText -replace '\s+', ' '
+
+    if ($ocrText.Length -gt 3000) {
+        $ocrText = $ocrText.Substring(0, 3000)
+    }
 
 	# Modelo de json para servir como molde para o output.
     $jsonSchema = @{
@@ -42,20 +54,23 @@ REGRAS RÍGIDAS DE FORMATAÇÃO:
 		keep_alive 		= 0					# Zera o tempo de vida da IA pra evitar que degrade
 											# após varios docs, levando a alucinação.
         options 		= @{
-            temperature = 0.0				# Configurando limite de input de dados 
-            num_ctx     = 4096				# e criatividade.
+            temperature = 0.0				# Configurando limite de input de dados, 
+            num_ctx     = 4096				# criatividade e quantidade de tokens usado para
+			num_predict = 100				# a resposta.
         }
 	}
 	
 	$jsonString = $bodyObject | ConvertTo-Json -Depth 10
     $utf8Bytes  = [System.Text.Encoding]::UTF8.GetBytes($jsonString)
 	
-	try {
+	try 
+	{
 		# API do Ollama.
 		$response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" `
                                       -Method Post `
                                       -Body $utf8Bytes `
-                                      -ContentType "application/json; charset=utf-8"
+                                      -ContentType "application/json; charset=utf-8" `
+									  -TimeoutSec 120
 
 		Write-Host "--- Resposta Bruta do Ollama ---" -ForegroundColor Cyan
 		Write-Host $response.response -ForegroundColor Gray
@@ -65,15 +80,24 @@ REGRAS RÍGIDAS DE FORMATAÇÃO:
 		$nomeExtraido = $result.owner_name
 
 		# Se o modelo devolver nomes separados por vírgula, pega o nome mais longo (o completo)
-		if ($nomeExtraido -and $nomeExtraido.Contains(",")) {
+		if ($nomeExtraido -and $nomeExtraido.Contains(",")) 
+		{
 			$listaNomes = $nomeExtraido -split "," | ForEach-Object { $_.Trim() }
 			# Ordena pelo tamanho do texto e pega o maior (ex: prefere "Natalis Del Valle..." ao invés de "M. Castro")
 			$nomeExtraido = ($listaNomes | Sort-Object Length -Descending)[0]
 		}
+		
+		# Garante que os espaços virem underlines (caso um nome tenha sido encontrado)
+		if ($nomeExtraido -and $nomeExtraido -ne "Não encontrado.") 
+		{
+        # Substitui qualquer sequência de espaços por um único underline
+			$nomeExtraido = $nomeExtraido -replace '\s+', '_'
+		}
 
     return $nomeExtraido
     }
-    catch {
+    catch 
+	{
         Write-Error "Erro ao processar: $_"
         return $null
     }
