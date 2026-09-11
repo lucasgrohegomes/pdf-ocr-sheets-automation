@@ -4,7 +4,7 @@ function Get-NomeColaborador {
 		[string]$OcrFilePath
 	)
 	
-	# Out-String garante que a variável seja UMA STRING ÚNICA e não um Array de linhas
+	# Out-String garante que a variável seja UMA STRING ÚNICA e não um Array de linhas.
     $ocrText = & pdftotext.exe -f 1 -l 3 -enc UTF-8 "$OcrFilePath" - | Out-String
 
     # Se estiver vazio ou só com espaços
