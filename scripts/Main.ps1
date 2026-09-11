@@ -4,8 +4,8 @@ param(
 )
 
 # Importa o script externo de OCR e o script externo que introduz o OCR à IA pra puxar o nome do colaborador.
-. "C:\Users\l.gomes\Documents\Scripts\pdf-ocr-sheets-automation\Call-PdfOcr.ps1"
-. "C:\Users\l.gomes\Documents\Scripts\pdf-ocr-sheets-automation\Get-NomeColaborador.ps1"
+. "$PSScriptRoot\Call-PdfOcr.ps1"
+. "$PSScriptRoot\Get-NomeColaborador.ps1"
 
 Write-Host ""
 
