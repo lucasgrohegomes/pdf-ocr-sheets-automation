@@ -1,3 +1,12 @@
 # Ignorar pasta de PDFs de exemplo.
-pdf
+credentials.json
+*.json
+!package.json
+*.exe
+*.dll
+*.pdb
+*.obj
 gui/*.exe
+*.pdf
+*.log
+*.tmp
