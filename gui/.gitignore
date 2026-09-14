@@ -1,0 +1,2 @@
+# Ignorar executaveis compilados.
+gui/*.exe
